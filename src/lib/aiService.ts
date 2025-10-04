@@ -19,8 +19,15 @@ export const getAIResponse = async (userMessage: string): Promise<string> => {
       throw new Error(`Error del servidor: ${response.status}`);
     }
 
-    const data = await response.json();
-    return data.respuesta || data.response || 'No se recibió una respuesta válida';
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await response.json();
+      return data.respuesta ?? data.response ?? data.message ?? JSON.stringify(data);
+    }
+
+    // Si el backend devuelve texto plano
+    const text = await response.text();
+    return text || 'No se recibió una respuesta válida';
   } catch (error) {
     console.error('Error al obtener respuesta de la IA:', error);
     throw new Error('No se pudo conectar con el servicio de IA. Por favor, intenta de nuevo.');
