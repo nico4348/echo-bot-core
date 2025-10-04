@@ -6,8 +6,10 @@ import ChatInput from "./ChatInput";
 import TypingIndicator from "./TypingIndicator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const ChatInterface = () => {
+  const { toast } = useToast();
   const [messages, setMessages] = useState<MessageType[]>([
     {
       id: "1",
@@ -41,7 +43,6 @@ const ChatInterface = () => {
     setIsTyping(true);
 
     try {
-      // Obtener respuesta de la IA (actualmente hardcodeada)
       const aiResponseContent = await getAIResponse(content);
 
       const aiMessage: MessageType = {
@@ -54,6 +55,21 @@ const ChatInterface = () => {
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error("Error al obtener respuesta de la IA:", error);
+      
+      toast({
+        title: "Error de conexión",
+        description: "Verifica que tu backend esté configurado con CORS: Access-Control-Allow-Origin, Access-Control-Allow-Methods (POST), Access-Control-Allow-Headers (Content-Type)",
+        variant: "destructive",
+      });
+      
+      // Agregar mensaje de error en el chat
+      const errorMessage: MessageType = {
+        id: (Date.now() + 1).toString(),
+        content: "Lo siento, no pude conectarme con el servidor. Por favor, verifica la configuración CORS de tu backend.",
+        role: "assistant",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsTyping(false);
     }
