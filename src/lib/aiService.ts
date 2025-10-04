@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 // Servicio de IA - Conectado al backend real
 const API_ENDPOINT = 'https://slow-views-sleep.loca.lt/ia';
 
@@ -7,27 +9,21 @@ const API_ENDPOINT = 'https://slow-views-sleep.loca.lt/ia';
  */
 export const getAIResponse = async (userMessage: string): Promise<string> => {
   try {
-    const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
+    const response = await axios.post(API_ENDPOINT, {
+      pregunta: userMessage
+    }, {
       headers: {
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ pregunta: userMessage }),
+      }
     });
 
-    if (!response.ok) {
-      throw new Error(`Error del servidor: ${response.status}`);
+    // Axios automáticamente parsea JSON, pero manejaremos string también
+    if (typeof response.data === 'string') {
+      return response.data || 'No se recibió una respuesta válida';
     }
 
-    const contentType = response.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      const data = await response.json();
-      return data.respuesta ?? data.response ?? data.message ?? JSON.stringify(data);
-    }
-
-    // Si el backend devuelve texto plano
-    const text = await response.text();
-    return text || 'No se recibió una respuesta válida';
+    // Si es un objeto JSON
+    return response.data.respuesta ?? response.data.response ?? response.data.message ?? JSON.stringify(response.data);
   } catch (error) {
     console.error('Error al obtener respuesta de la IA:', error);
     throw new Error('No se pudo conectar con el servicio de IA. Por favor, intenta de nuevo.');
